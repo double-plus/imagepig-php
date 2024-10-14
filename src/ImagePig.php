@@ -4,6 +4,8 @@ namespace ImagePig;
 
 class APIResult extends \stdClass {
     public $content;
+    const DOWNLOAD_ATTEMPTS = 10;
+    const DOWNLOAD_INTERRUPTION = 1;
 
     public function __construct($content) {
         $this->content = $content;
@@ -32,15 +34,28 @@ class APIResult extends \stdClass {
         }
 
         if (array_key_exists('image_url', $this->content)) {
-            $ch = curl_init($this->content['image_url']);
+            foreach (range(1, self::DOWNLOAD_ATTEMPTS) as $i) {
+                $ch = curl_init($this->content['image_url']);
 
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'User-Agent: Mozilla/5.0',
-            ]);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_FORBID_REUSE, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'User-Agent: Mozilla/5.0',
+                ]);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_FORBID_REUSE, true);
 
-            return curl_exec($ch);
+                $data = curl_exec($ch);
+                $status_code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+                if ($status_code == 200) {
+                    return $data;
+                }
+
+                if ($status_code == 404) {
+                    sleep(self::DOWNLOAD_INTERRUPTION);
+                } else {
+                    throw new Exception('Unexpected response when downloading, got HTTP code ' . $status_code);
+                }
+            }
         }
 
         return null;
