@@ -23,4 +23,10 @@ $result->save('cute-piglet.jpeg');
 
 # or access image data (binary string)
 $result->data;
+
+# or access image as a GDImage object (needs to have the GD extension installed)
+$result->image
 ```
+
+## Contact us
+Something does not work as expected? Feel free to [send us a message](https://imagepig.com/contact/), we are here for you.

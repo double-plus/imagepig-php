@@ -15,6 +15,8 @@ class APIResult extends \stdClass {
         switch ($name) {
             case 'data':
                 return $this->getData();
+            case 'image':
+                return $this->getImage();
             case 'url':
                 return $this->getUrl();
             case 'seed':
@@ -25,7 +27,7 @@ class APIResult extends \stdClass {
                 return $this->getDuration();
         }
 
-        throw new Exception('Trying to access unknown property: ' . $name);
+        throw new \Exception('Trying to access unknown property: ' . $name);
     }
 
     public function getData() {
@@ -53,12 +55,20 @@ class APIResult extends \stdClass {
                 if ($status_code == 404) {
                     sleep(self::DOWNLOAD_INTERRUPTION);
                 } else {
-                    throw new Exception('Unexpected response when downloading, got HTTP code ' . $status_code);
+                    throw new \Exception('Unexpected response when downloading, got HTTP code ' . $status_code);
                 }
             }
         }
 
         return null;
+    }
+
+    public function getImage() {
+        if (!extension_loaded('gd')) {
+            throw new \RuntimeException('The GD extensions is not loaded, make sure you have installed it: https://www.php.net/manual/image.setup.php');
+        }
+
+        return imagecreatefromstring(base64_decode($this->data));
     }
 
     public function getUrl() {
@@ -120,18 +130,16 @@ class ImagePig {
         $response = curl_exec($ch);
 
         if (curl_errno($ch)) {
-            throw new Exception('cURL error: ' . curl_error($ch));
+            throw new \Exception('cURL error: ' . curl_error($ch));
+        }
+
+        $status_code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+        if ($status_code !== 200) {
+            throw new \Exception('Unexpected response when sending request, got HTTP code ' . $status_code);
         }
 
         return new APIResult(json_decode($response, true));
-    }
-
-    private function checkUrl($string) {
-        $url = parse_url($string);
-
-        if (!in_array($url['scheme'], ['http', 'https']) || !$url['host']) {
-            throw new Exception('Invalid URL: ' . $string);
-        }
     }
 
     public function default($prompt, $negative_prompt = '', $params = []) {
@@ -152,7 +160,7 @@ class ImagePig {
         $params['positive_prompt'] = $prompt;
 
         if (!in_array($proportion, ['landscape', 'portrait', 'square', 'wide'])) {
-            throw new Exception('Unknown proportion value: ' . $proportion);
+            throw new \Exception('Unknown proportion value: ' . $proportion);
         }
 
         $params['proportion'] = $proportion;
@@ -160,13 +168,30 @@ class ImagePig {
         return $this->callApi('flux', $params);
     }
 
-    public function faceswap($source_image_url, $target_image_url, $params = []) {
-        $this->checkUrl($source_image_url);
-        $this->checkUrl($target_image_url);
+    private function prepareImage($image, $name, $params) {
+        if (strncmp($image, 'http://', 7) === 0 || strncmp($image, 'https://', 8) === 0) {
+            $params[$name .'_url'] = $image;
+        } else {
+            if (!extension_loaded('gd')) {
+                throw new \RuntimeException('The GD extensions is not loaded, make sure you have installed it: https://www.php.net/manual/image.setup.php');
+            }
 
-        $params['source_image_url'] = $source_image_url;
-        $params['target_image_url'] = $target_image_url;
+            $im = @imagecreatefromstring($image);
 
+            if ($im !== false) {
+                unset($im);
+                $params[$name . '_data'] = base64_encode($image);
+            } else {
+                throw new \Exception('The ' . $name . ' argument is not a valid URL or image data.');
+            }
+        }
+
+        return $params;
+    }
+
+    public function faceswap($source_image, $target_image, $params = []) {
+        $params = $this->prepareImage($source_image, 'source_image', $params);
+        $params = $this->prepareImage($target_image, 'target_image', $params);
         return $this->callApi('faceswap', $params);
     }
 }
