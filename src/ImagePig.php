@@ -194,4 +194,15 @@ class ImagePig {
         $params = $this->prepareImage($target_image, 'target_image', $params);
         return $this->callApi('faceswap', $params);
     }
+
+    public function upscale($image, $upscaling_factor=2, $params = []) {
+        $params = $this->prepareImage($image, 'image', $params);
+
+        if (!in_array($upscaling_factor, [2, 4, 8])) {
+            throw new \Exception('Unknown upscaling factor value: ' . $upscaling_factor);
+        }
+        $params['upscaling_factor'] = $upscaling_factor;
+
+        return $this->callApi('upscale', $params);
+    }
 }
