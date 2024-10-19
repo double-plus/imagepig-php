@@ -1,4 +1,4 @@
-# imagepig-php
+# imagepig
 [PHP package](https://packagist.org/packages/doubleplus/imagepig) for [Image Pig](https://imagepig.com/), the API for AI images.
 
 ## Installation
