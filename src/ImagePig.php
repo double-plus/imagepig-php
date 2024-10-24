@@ -205,4 +205,17 @@ class ImagePig {
 
         return $this->callApi('upscale', $params);
     }
+
+    public function cutout($image, $params = []) {
+        $params = $this->prepareImage($image, 'image', $params);
+        return $this->callApi('cutout', $params);
+    }
+
+    public function replace($image, $select_prompt, $positive_prompt, $negative_prompt = '', $params = []) {
+        $params = $this->prepareImage($image, 'image', $params);
+        $params['select_prompt'] = $select_prompt;
+        $params['positive_prompt'] = $positive_prompt;
+        $params['negative_prompt'] = $negative_prompt;
+        return $this->callApi('replace', $params);
+    }
 }

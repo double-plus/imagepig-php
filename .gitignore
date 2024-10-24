@@ -1,2 +1,4 @@
 /vendor/*
-imagepig-test.php
+
+# tests output
+output/
