@@ -13,6 +13,8 @@ class APIResult extends \stdClass {
 
     public function __get($name) {
         switch ($name) {
+            case 'content':
+                return $this->getContent();
             case 'data':
                 return $this->getData();
             case 'image':
@@ -28,6 +30,10 @@ class APIResult extends \stdClass {
         }
 
         throw new \Exception('Trying to access unknown property: ' . $name);
+    }
+
+    public function getContent() {
+        return $this->content;
     }
 
     public function getData() {
@@ -105,9 +111,10 @@ class ImagePig {
     public $api_key;
     public $api_url;
 
-    public function __construct($api_key, $api_url = 'https://api.imagepig.com') {
+    public function __construct($api_key, $raise_exception = true, $api_url = 'https://api.imagepig.com') {
         $this->api_key = $api_key;
         $this->api_url = $api_url;
+        $this->raise_exception = $raise_exception;
 
         if (!extension_loaded('curl')) {
             throw new \RuntimeException('The cURL extensions is not loaded, make sure you have installed it: https://php.net/manual/curl.setup.php');
@@ -135,7 +142,7 @@ class ImagePig {
 
         $status_code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 
-        if ($status_code !== 200) {
+        if ($status_code !== 200 && $this->raise_exception) {
             throw new \Exception('Unexpected response when sending request, got HTTP code ' . $status_code);
         }
 
