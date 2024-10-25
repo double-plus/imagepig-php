@@ -8,7 +8,7 @@ if (!is_dir($path)) {
 }
 
 $jane = 'https://imagepig.com/static/jane.jpeg';
-$mona_lisa = 'https://imagepig.com/static/mona_lisa.jpeg';
+$mona_lisa = 'https://imagepig.com/static/mona-lisa.jpeg';
 
 $imagepig = new \ImagePig\ImagePig(getenv('IMAGEPIG_API_KEY'));
 
@@ -19,3 +19,4 @@ $imagepig->faceswap($jane, $mona_lisa)->save($path . '/faceswap.jpeg');
 $imagepig->upscale($jane)->save($path . '/upscale.jpeg');
 $imagepig->cutout($jane)->save($path . '/cutout.png');
 $imagepig->replace($jane, 'woman', 'robot')->save($path . '/replace.jpeg');
+$imagepig->outpaint($jane, 'dress', 0, 0, 500)->save($path . '/outpaint.jpeg');

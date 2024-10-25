@@ -225,4 +225,15 @@ class ImagePig {
         $params['negative_prompt'] = $negative_prompt;
         return $this->callApi('replace', $params);
     }
+
+    public function outpaint($image, $positive_prompt, $top = 0, $right = 0, $bottom = 0, $left = 0, $negative_prompt = '', $params = []) {
+        $params = $this->prepareImage($image, 'image', $params);
+        $params['positive_prompt'] = $positive_prompt;
+        $params['negative_prompt'] = $negative_prompt;
+        $params['top'] = $top;
+        $params['right'] = $right;
+        $params['bottom'] = $bottom;
+        $params['left'] = $left;
+        return $this->callApi('outpaint', $params);
+    }
 }
