@@ -2,6 +2,8 @@
 
 namespace ImagePig;
 
+class ImagePigException extends \Exception {}
+
 class APIResult extends \stdClass {
     public $content;
     const DOWNLOAD_ATTEMPTS = 10;
@@ -29,7 +31,7 @@ class APIResult extends \stdClass {
                 return $this->getDuration();
         }
 
-        throw new \Exception('Trying to access unknown property: ' . $name);
+        throw new ImagePigException('Trying to access unknown property: ' . $name);
     }
 
     public function getContent() {
@@ -61,7 +63,7 @@ class APIResult extends \stdClass {
                 if ($status_code == 404) {
                     sleep(self::DOWNLOAD_INTERRUPTION);
                 } else {
-                    throw new \Exception('Unexpected response when downloading, got HTTP code ' . $status_code);
+                    throw new ImagePigException('Unexpected response when downloading, got HTTP code ' . $status_code);
                 }
             }
         }
@@ -137,13 +139,13 @@ class ImagePig {
         $response = curl_exec($ch);
 
         if (curl_errno($ch)) {
-            throw new \Exception('cURL error: ' . curl_error($ch));
+            throw new ImagePigException('cURL error: ' . curl_error($ch));
         }
 
         $status_code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 
         if ($status_code !== 200 && $this->raise_exception) {
-            throw new \Exception('Unexpected response when sending request, got HTTP code ' . $status_code);
+            throw new ImagePigException('Unexpected response when sending request, got HTTP code ' . $status_code);
         }
 
         return new APIResult(json_decode($response, true));
@@ -167,7 +169,7 @@ class ImagePig {
         $params['positive_prompt'] = $prompt;
 
         if (!in_array($proportion, ['landscape', 'portrait', 'square', 'wide'])) {
-            throw new \Exception('Unknown proportion value: ' . $proportion);
+            throw new ImagePigException('Unknown proportion value: ' . $proportion);
         }
 
         $params['proportion'] = $proportion;
@@ -189,7 +191,7 @@ class ImagePig {
                 unset($im);
                 $params[$name . '_data'] = base64_encode($image);
             } else {
-                throw new \Exception('The ' . $name . ' argument is not a valid URL or image data.');
+                throw new ImagePigException('The ' . $name . ' argument is not a valid URL or image data.');
             }
         }
 
@@ -206,7 +208,7 @@ class ImagePig {
         $params = $this->prepareImage($image, 'image', $params);
 
         if (!in_array($upscaling_factor, [2, 4, 8])) {
-            throw new \Exception('Unknown upscaling factor value: ' . $upscaling_factor);
+            throw new ImagePigException('Unknown upscaling factor value: ' . $upscaling_factor);
         }
         $params['upscaling_factor'] = $upscaling_factor;
 
