@@ -148,7 +148,7 @@ class ImagePig {
             throw new ImagePigException('Unexpected response when sending request, got HTTP code ' . $status_code);
         }
 
-        return new APIResult(json_decode($response, true));
+        return new APIResult(json_decode($response, true, 512, JSON_BIGINT_AS_STRING));
     }
 
     public function default($prompt, $negative_prompt = '', $params = []) {
